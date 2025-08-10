@@ -69,36 +69,41 @@ def update_mpd_db(songs, add_to_playlist):
 def clean_filename(path):
     path = path.replace("\t", " ")
     if any(platform.win32_ver()):
-        path.replace("\"", "'")
-        array_of_special_characters = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+        # Replace quotes on Windows to avoid issues with file systems and shells
+        path = path.replace('"', "'")
+        invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
     else:
-        array_of_special_characters = ['/', ':', '"', '?']
+        invalid_chars = ['/', ':', '"', '?']
 
-    return ''.join([c for c in path if c not in array_of_special_characters])
+    return ''.join([c for c in path if c not in invalid_chars])
 
 
 def download_song_and_get_absolute_filename(search_type, song, playlist_name=None):
 
     file_extension = get_file_extension()
-    if search_type == TYPE_ALBUM:
-        song_filename = "{:02d} - {} {}.{}".format(int(song['TRACK_NUMBER']),
-                                                   song['ART_NAME'],
-                                                   song['SNG_TITLE'],
-                                                   file_extension)
+    # Build filename without artist. Prefer: "trackNumber - title.ext". If track number
+    # is missing or invalid, fall back to just "title.ext".
+    track_num = None
+    try:
+        if 'TRACK_NUMBER' in song and str(song['TRACK_NUMBER']).strip() != "":
+            track_num = int(song['TRACK_NUMBER'])
+    except Exception:
+        track_num = None
+
+    if track_num is not None and track_num > 0:
+        song_filename = "{:02d} - {}.{}".format(track_num, song['SNG_TITLE'], file_extension)
     else:
-        song_filename = "{} - {}.{}".format(song['ART_NAME'],
-                                            song['SNG_TITLE'],
-                                            file_extension)
+        song_filename = "{}.{}".format(song['SNG_TITLE'], file_extension)
     song_filename = clean_filename(song_filename)
 
     if search_type == TYPE_TRACK:
         absolute_filename = os.path.join(config["download_dirs"]["songs"], song_filename)
     elif search_type == TYPE_ALBUM:
-        album_name = "{} - {}".format(song['ART_NAME'], song['ALB_TITLE'])
-        album_name = clean_filename(album_name)
-        album_dir = os.path.join(config["download_dirs"]["albums"], album_name)
-        if not os.path.exists(album_dir):
-            os.mkdir(album_dir)
+        # Build nested path: Albums/<Artist>/<Album Title>
+        artist_dir_name = clean_filename(song.get('ART_NAME', 'Unknown Artist'))
+        album_dir_name = clean_filename(song.get('ALB_TITLE', 'Unknown Album'))
+        album_dir = os.path.join(config["download_dirs"]["albums"], artist_dir_name, album_dir_name)
+        os.makedirs(album_dir, exist_ok=True)
         absolute_filename = os.path.join(album_dir, song_filename)
     elif search_type == TYPE_PLAYLIST:
         assert type(playlist_name) is str
