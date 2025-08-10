@@ -8,7 +8,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from deezer_downloader.configuration import config
 from deezer_downloader.youtubedl import youtubedl_download
 from deezer_downloader.spotify import get_songs_from_spotify_website
-from deezer_downloader.deezer import TYPE_TRACK, TYPE_ALBUM, TYPE_PLAYLIST, get_song_infos_from_deezer_website, download_song, download_lrc, parse_deezer_playlist, deezer_search, get_deezer_favorites
+from deezer_downloader.deezer import TYPE_TRACK, TYPE_ALBUM, TYPE_PLAYLIST, get_song_infos_from_deezer_website, download_song, download_lrc, parse_deezer_playlist, deezer_search, get_deezer_favorites, get_album_data
 from deezer_downloader.deezer import Deezer403Exception, Deezer404Exception
 from deezer_downloader.deezer import get_file_extension
 
@@ -23,6 +23,9 @@ def check_download_dirs_exist():
 
 
 check_download_dirs_exist()
+
+# Cache album artist lookups to avoid repeated network calls per album
+_ALBUM_ARTIST_CACHE = {}
 
 
 def make_song_paths_relative_to_mpd_root(songs, prefix=""):
@@ -96,11 +99,28 @@ def download_song_and_get_absolute_filename(search_type, song, playlist_name=Non
         song_filename = "{}.{}".format(song['SNG_TITLE'], file_extension)
     song_filename = clean_filename(song_filename)
 
+    forced_album_artist = None
     if search_type == TYPE_TRACK:
         absolute_filename = os.path.join(config["download_dirs"]["songs"], song_filename)
     elif search_type == TYPE_ALBUM:
         # Build nested path: Albums/<Artist>/<Album Title>
-        artist_dir_name = clean_filename(song.get('ART_NAME', 'Unknown Artist'))
+        # Always use the album's primary artist, not the track artist (feats, guests)
+        album_id = song.get('ALB_ID')
+        artist_name = song.get('ART_NAME', 'Unknown Artist')
+        if album_id:
+            cached = _ALBUM_ARTIST_CACHE.get(album_id)
+            if cached:
+                artist_name = cached
+            else:
+                try:
+                    album_info = get_album_data(album_id)
+                    if album_info and album_info.get('ART_NAME'):
+                        artist_name = album_info['ART_NAME']
+                        _ALBUM_ARTIST_CACHE[album_id] = artist_name
+                except Exception as _:
+                    pass
+        forced_album_artist = artist_name
+        artist_dir_name = clean_filename(artist_name)
         album_dir_name = clean_filename(song.get('ALB_TITLE', 'Unknown Album'))
         album_dir = os.path.join(config["download_dirs"]["albums"], artist_dir_name, album_dir_name)
         os.makedirs(album_dir, exist_ok=True)
@@ -124,7 +144,13 @@ def download_song_and_get_absolute_filename(search_type, song, playlist_name=Non
             download_lrc(song['SNG_ID'], lrc_filename)
     else:
         print("Downloading '{}'".format(song_filename))
-        download_song(song, absolute_filename)
+        if forced_album_artist:
+            # Ensure artist metadata is the album artist for album tracks
+            song_for_download = dict(song)
+            song_for_download['ART_NAME'] = forced_album_artist
+            download_song(song_for_download, absolute_filename)
+        else:
+            download_song(song, absolute_filename)
     return absolute_filename
 
 
