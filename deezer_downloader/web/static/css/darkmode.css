@@ -1,0 +1,165 @@
+/* ===== Dark Mode Theme — neutral grey (Claude Code style) ===== */
+body.dark-mode {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+.dark-mode .container {
+  background-color: #1e1e1e;
+}
+
+/* Nav tabs */
+.dark-mode .nav-tabs {
+  border-bottom-color: #3c3c3c;
+}
+
+.dark-mode .nav-tabs .nav-link {
+  color: #999;
+  border-color: transparent;
+}
+
+.dark-mode .nav-tabs .nav-link:hover {
+  color: #e0e0e0;
+  border-color: #4a4a4a #4a4a4a transparent;
+  background-color: #2a2a2a;
+}
+
+.dark-mode .nav-tabs .nav-link.active {
+  color: #fff;
+  background-color: #2a2a2a;
+  border-color: #4a4a4a #4a4a4a #2a2a2a;
+}
+
+/* Tables */
+.dark-mode .table {
+  color: #d4d4d4;
+}
+
+.dark-mode .table thead th {
+  border-bottom-color: #3c3c3c;
+  color: #bbb;
+}
+
+.dark-mode .table td,
+.dark-mode .table th {
+  border-top-color: #333;
+}
+
+.dark-mode .table-hover tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+/* Forms */
+.dark-mode .form-control {
+  background-color: #2a2a2a;
+  border-color: #3c3c3c;
+  color: #d4d4d4;
+}
+
+.dark-mode .form-control::placeholder {
+  color: #777;
+}
+
+.dark-mode .form-control:focus {
+  background-color: #333;
+  border-color: #555;
+  color: #e0e0e0;
+  box-shadow: 0 0 0 0.2rem rgba(80, 80, 80, 0.3);
+}
+
+/* Buttons */
+.dark-mode .btn-info {
+  background-color: #3c3c3c;
+  border-color: #4a4a4a;
+  color: #d4d4d4;
+}
+
+.dark-mode .btn-info:hover {
+  background-color: #505050;
+  border-color: #5a5a5a;
+}
+
+/* Footer */
+.dark-mode .footer {
+  background-color: #252525 !important;
+}
+
+.dark-mode .footer .text-muted {
+  color: #888 !important;
+}
+
+/* Audio player */
+.dark-mode audio {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Headings */
+.dark-mode h3 {
+  color: #d4d4d4;
+}
+
+/* Links */
+.dark-mode a {
+  color: #9cdcfe;
+}
+
+.dark-mode a:hover {
+  color: #b8e6ff;
+}
+
+/* jGrowl notifications */
+.dark-mode .jGrowl-notification {
+  background-color: #2a2a2a;
+  color: #d4d4d4;
+  border: 1px solid #3c3c3c;
+}
+
+/* Textarea (debug log) */
+.dark-mode textarea.form-control {
+  background-color: #1a1a1a;
+  color: #c8c8c8;
+  border-color: #3c3c3c;
+}
+
+/* Scrollbar */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+/* Toggle button */
+#dark-mode-toggle {
+  position: fixed;
+  top: 10px;
+  right: 15px;
+  z-index: 1000;
+  background: none;
+  border: 2px solid #888;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 32px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+body:not(.dark-mode) #dark-mode-toggle {
+  color: #333;
+  border-color: #ccc;
+}
+
+body.dark-mode #dark-mode-toggle {
+  color: #f0c040;
+  border-color: #555;
+}
